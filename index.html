@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>아들일까 딸일까</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: one phone-width paper sheet, like the printed board. Party header → 3×3 post-it board → status. Single light "paper" look on purpose. */
+:root {
+  --paper: #ffffff;
+  --ink: #3b3636;
+  --muted: #8b8484;
+  --grid: #7b7a7a;
+  --red: #e8262f;
+  --blue: #1ea2e6;
+  --blue-deep: #0f7fc0;
+  --skin: #fce5d3;
+  --cheek: #f7a8b0;
+  --bow: #ff9ccf;
+  --display: "Gaegu", "Gamja Flower", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --body: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color-scheme: light;
+}
+html, body { background: var(--paper); color: var(--ink); }
+body { overflow-x: hidden; word-break: keep-all; font-family: var(--body); -webkit-tap-highlight-color: transparent; }
+.wrap {
+  max-width: 460px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 32px;
+  display: flex; flex-direction: column; gap: 14px; overflow-x: clip;
+}
+
+/* Header */
+.hero { position: relative; padding-top: 48px; }
+.bunting { position: absolute; top: 0; left: -16px; width: calc(100% + 32px); height: 70px; pointer-events: none; }
+.sprinkles { position: absolute; inset: 0; pointer-events: none; }
+.faces { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 4px; }
+.face { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.face svg { width: min(30vw, 120px); height: auto; }
+.face .ask { font-family: var(--display); font-weight: 700; font-size: clamp(20px, 5.4vw, 26px); line-height: 1; }
+.face.boy .ask { transform: rotate(-12deg) translate(-6px, 6px); align-self: flex-start; }
+.face.girl .ask { transform: rotate(12deg) translate(6px, 6px); align-self: flex-end; }
+.qmark { font-family: var(--display); font-weight: 700; color: var(--grid); font-size: clamp(84px, 24vw, 112px); line-height: .8; padding-bottom: 14px; animation: wobble 2.6s ease-in-out infinite; }
+@keyframes wobble { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+
+h1 { margin: 6px 0 0; font-family: var(--display); font-weight: 700; font-size: clamp(26px, 7vw, 32px); text-align: center; text-wrap: balance; line-height: 1.15; }
+.lede { margin: 0; text-align: center; font-size: 15px; line-height: 1.6; color: var(--ink); text-wrap: balance; }
+.key { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--display); font-weight: 700; font-size: 19px; padding: 2px 12px 2px 8px; border: 2px dashed currentColor; border-radius: 999px; }
+.chip svg { width: 20px; height: 20px; }
+.chip.b { color: var(--blue-deep); }
+.chip.r { color: var(--red); }
+
+/* Board */
+.board { position: relative; width: 100%; max-width: 420px; aspect-ratio: 1; margin: 4px auto 0; }
+.cells { position: absolute; inset: 3.2%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); }
+.cell { position: relative; display: grid; place-items: center; }
+.heart { width: 78%; height: 78%; overflow: visible; }
+.cell.open .heart { animation: pop .5s cubic-bezier(.3,1.6,.5,1) both; }
+@keyframes pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
+.gridlines, .winline { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.gridlines { z-index: 1; }
+.winline { z-index: 3; }
+.winline path { stroke-dasharray: 400; stroke-dashoffset: 400; }
+.winline.on path { animation: draw .9s ease-out forwards; }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+.note {
+  position: absolute; z-index: 2; width: 86%; height: 86%; top: 7%; left: 7%;
+  border: 0; padding: 0; cursor: pointer; border-radius: 2px;
+  background: linear-gradient(160deg, var(--c) 0%, var(--c) 62%, var(--c2) 100%);
+  box-shadow: 0 1px 1px rgba(60,40,20,.12), 2px 5px 9px -3px rgba(60,40,20,.28);
+  transform: rotate(var(--r));
+  font-family: var(--display); font-weight: 700; font-size: clamp(30px, 9vw, 44px); color: rgba(70,55,40,.38);
+  transition: transform .15s ease;
+}
+.note::before { /* the sticky strip at the top */
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 18%;
+  background: linear-gradient(to bottom, rgba(0,0,0,.05), rgba(0,0,0,0));
+}
+.note::after { /* lifting corner */
+  content: ""; position: absolute; right: 0; bottom: 0; width: 22%; height: 22%;
+  background: linear-gradient(135deg, var(--c2) 0%, var(--c2) 48%, rgba(255,255,255,.0) 50%);
+  filter: drop-shadow(-2px -2px 2px rgba(60,40,20,.18));
+}
+.note:hover { transform: rotate(var(--r)) scale(1.03); }
+.note:active { transform: rotate(var(--r)) scale(.97); }
+.note:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.note.peel { z-index: 20; pointer-events: none; animation: peel .75s cubic-bezier(.45,0,.75,.4) forwards; transform-origin: 50% 0; }
+@keyframes peel {
+  0%   { transform: rotate(var(--r)); }
+  22%  { transform: rotate(calc(var(--r) - 10deg)) translateY(-8%) scale(1.06); }
+  100% { transform: translate(var(--dx), 170%) rotate(var(--r2)) scale(.85); opacity: 0; }
+}
+
+.stamp {
+  position: absolute; z-index: 4; left: 50%; top: 50%;
+  font-family: var(--display); font-weight: 700; font-size: clamp(54px, 16vw, 76px); color: var(--blue-deep);
+  background: rgba(255,255,255,.88); border: 4px solid currentColor; border-radius: 14px; padding: 0 18px; line-height: 1.2; white-space: nowrap;
+  transform: translate(-50%, -50%) rotate(-10deg) scale(1.6); opacity: 0; pointer-events: none;
+}
+.stamp.on { animation: stamp .45s cubic-bezier(.2,1.4,.4,1) forwards; }
+@keyframes stamp { to { transform: translate(-50%, -50%) rotate(-10deg) scale(1); opacity: 1; } }
+
+.status { margin: 0; min-height: 1.4em; text-align: center; font-family: var(--display); font-weight: 700; font-size: 22px; }
+.status.hot { color: var(--red); animation: nudge .5s ease; }
+.status.hot.b { color: var(--blue-deep); }
+.status.hot.both { color: #8a4fc2; }
+@keyframes nudge { 0%,100% { transform: none; } 30% { transform: scale(1.08); } }
+.tools { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.btn { font-family: var(--display); font-weight: 700; font-size: 19px; border-radius: 999px; padding: 6px 18px; cursor: pointer; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); }
+.btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.btn[hidden] { display: none !important; }
+
+/* Result */
+.reveal {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+  background: rgba(234, 247, 255, .97);
+  padding: calc(20px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+}
+.card { max-width: 380px; width: 100%; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; animation: rise .6s cubic-bezier(.2,1.2,.4,1) both; }
+@keyframes rise { from { transform: translateY(30px) scale(.9); opacity: 0; } }
+.card .pre { font-family: var(--display); font-size: 22px; color: var(--muted); margin: 0; }
+.card h2 { margin: 0; font-family: var(--display); font-weight: 700; color: var(--blue-deep); font-size: clamp(56px, 17vw, 78px); line-height: 1; }
+.card svg.baby { width: 150px; height: auto; animation: bounce 1.4s ease-in-out infinite; }
+@keyframes bounce { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-10px) rotate(3deg); } }
+.card .tag { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--blue); margin: 0; }
+.card p.msg { margin: 0; font-size: 16px; line-height: 1.65; text-wrap: balance; }
+.card .tools { margin-top: 8px; }
+canvas.fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 60; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .qmark, .card svg.baby { animation: none; }
+  .note.peel { animation-duration: .01s; }
+  .winline.on path { animation-duration: .01s; }
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="5"/>
+    </filter>
+    <filter id="crayon" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.4 2.0" result="a"/>
+      <feComposite in="SourceGraphic" in2="a" operator="in" result="g"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" seed="2" result="d"/>
+      <feDisplacementMap in="g" in2="d" scale="4"/>
+    </filter>
+    <path id="h" d="M50 88C50 88 8 61 8 34 8 18 20 8 33 8c9 0 15 6 17 12 2-6 8-12 17-12 13 0 25 10 25 26 0 27-42 54-42 54z"/>
+  </defs>
+</svg>
+
+<main class="wrap">
+  <header class="hero">
+    <svg class="bunting" id="bunting" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <svg class="sprinkles" id="sprinkles" viewBox="0 0 400 200" preserveAspectRatio="none" aria-hidden="true"></svg>
+    <div class="faces">
+      <div class="face boy">
+        <span class="ask">아들일까?</span>
+        <svg viewBox="0 0 120 100" aria-hidden="true" id="boyFace"></svg>
+      </div>
+      <div class="qmark" aria-hidden="true">?</div>
+      <div class="face girl">
+        <span class="ask">딸일까?</span>
+        <svg viewBox="0 0 120 100" aria-hidden="true" id="girlFace"></svg>
+      </div>
+    </div>
+    <h1>우리 아기는 아들일까, 딸일까?</h1>
+  </header>
+
+  <p class="lede">포스트잇을 톡 눌러 하나씩 떼어 보세요.<br>같은 색 하트 세 개가 한 줄로 이어지면 정답이 나와요.</p>
+  <div class="key" aria-hidden="true">
+    <span class="chip b"><svg viewBox="0 0 100 100"><use href="#h" fill="currentColor"/></svg>파란 줄 빙고 = 아들</span>
+    <span class="chip r"><svg viewBox="0 0 100 100"><use href="#h" fill="currentColor"/></svg>빨간 줄 빙고 = 딸</span>
+  </div>
+
+  <section class="board" id="board" aria-label="하트 빙고판">
+    <div class="cells" id="cells"></div>
+    <svg class="gridlines" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true">
+      <g fill="none" stroke="var(--grid)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" filter="url(#rough)">
+        <rect x="5" y="5" width="290" height="290" rx="3"/>
+        <path d="M101 6V294M199 6V294M6 101H294M6 199H294"/>
+      </g>
+    </svg>
+    <svg class="winline" id="winline" viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true">
+      <path d="" fill="none" stroke-width="13" stroke-linecap="round" opacity=".85" filter="url(#rough)"/>
+    </svg>
+    <div class="stamp" id="stamp" aria-hidden="true">빙고!</div>
+  </section>
+
+  <p class="status" id="status" aria-live="polite"></p>
+  <div class="tools">
+    <button class="btn primary" id="again" type="button" hidden>결과 다시 보기</button>
+    <button class="btn" id="reset" type="button">처음부터 다시</button>
+  </div>
+</main>
+
+<div class="reveal" id="reveal" hidden role="dialog" aria-modal="true" aria-labelledby="revealTitle">
+  <div class="card">
+    <p class="pre">두구두구… 우리 아기는</p>
+    <h2 id="revealTitle">아들이에요!</h2>
+    <svg class="baby" viewBox="0 0 120 100" aria-hidden="true" id="revealFace"></svg>
+    <p class="tag">파란 하트 빙고 완성!</p>
+    <p class="msg">튼튼한 아들이 우리 가족을 찾아왔어요.<br>건강하게 만날 수 있도록 많이 축복해 주세요.</p>
+    <div class="tools">
+      <button class="btn primary" id="close" type="button">빙고판 보기</button>
+      <button class="btn" id="reset2" type="button">처음부터 다시</button>
+    </div>
+  </div>
+</div>
+<canvas class="fx" id="fx" aria-hidden="true"></canvas>
+
+<script>
+(function () {
+  const RED = "var(--red)", BLUE = "var(--blue)";
+  const W = "#ffffff";
+  const H = '<use href="#h"/>';
+
+  // Hearts drawn to match the printed board, left→right, top→bottom.
+  const cells = [
+    { c: "r", svg: `<g transform="translate(5 5) scale(.9)" filter="url(#crayon)"><use href="#h" fill="${RED}"/></g>` },
+    { c: "r", svg: `<g transform="translate(6 8) scale(.88)"><use href="#h" fill="${RED}"/></g>
+                   <path d="M72 28c5 4 7 11 5 18" stroke="${W}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+                   <path d="M71 54l-2 3" stroke="${W}" stroke-width="3.5" stroke-linecap="round"/>` },
+    { c: "b", svg: `<g transform="rotate(-4 50 50) translate(2 4) scale(.96)" filter="url(#rough)"><use href="#h" fill="${BLUE}"/></g>` },
+    { c: "r", svg: `<g transform="translate(2 8) scale(.38)"><use href="#h" fill="${RED}"/></g>
+                   <g transform="translate(34 18) scale(.64)"><use href="#h" fill="${RED}"/></g>
+                   <g transform="translate(10 50) scale(.42) rotate(-8 50 50)"><use href="#h" fill="${RED}"/></g>` },
+    { c: "b", svg: `<g fill="none" stroke="${BLUE}" stroke-linecap="round" filter="url(#rough)">
+                     <path d="M48 26C40 10 18 12 18 32c0 18 20 32 34 44 10-10 32-24 32-44 0-18-22-22-30-6" stroke-width="4.5"/>
+                     <path d="M8 86C34 82 66 76 98 58" stroke-width="4"/>
+                     <path d="M30 92c20-4 40-8 56-18" stroke-width="2.5"/>
+                   </g>` },
+    { c: "r", svg: `<g transform="rotate(14 50 50) translate(10 10) scale(.8)"><use href="#h" fill="${RED}"/></g>
+                   <path d="M72 36c4 6 4 14 0 22" stroke="${W}" stroke-width="3" fill="none" stroke-linecap="round"/>
+                   <path d="M78 80l7-5M74 86l6-3" stroke="${RED}" stroke-width="2.4" stroke-linecap="round"/>` },
+    { c: "b", svg: `<g transform="translate(2 2) scale(.68) rotate(-6 50 50)"><use href="#h" fill="${BLUE}"/></g>
+                   <g transform="translate(60 62) scale(.34) rotate(10 50 50)"><use href="#h" fill="${BLUE}"/></g>` },
+    { c: "r", svg: `<g transform="translate(9 20) scale(.82)" fill="none" stroke="${RED}" stroke-width="6" stroke-linejoin="round" filter="url(#crayon)"><use href="#h"/></g>
+                   <path d="M40 6l3 8M50 2v10M60 6l-3 8" stroke="${RED}" stroke-width="4" stroke-linecap="round" filter="url(#crayon)"/>` },
+    { c: "b", svg: `<g transform="translate(10 10) scale(.8)" fill="none" stroke="${BLUE}" stroke-width="9" stroke-linejoin="round" filter="url(#rough)"><use href="#h"/></g>` }
+  ];
+  const noteColors = [
+    ["#ffe66d", "#f3cf3c"], ["#bff0c9", "#94dca6"], ["#ffc78f", "#f5a865"],
+    ["#ddcbff", "#bfa6f2"], ["#e4f79c", "#c9e468"], ["#fff1a6", "#f0d966"],
+    ["#ffd0a8", "#f2b07c"], ["#c9f2dc", "#9cdcb8"], ["#ffe66d", "#f3cf3c"]
+  ];
+  const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const $ = (id) => document.getElementById(id);
+  const cellsEl = $("cells"), statusEl = $("status");
+  let opened, won;
+
+  // ---------- header art ----------
+  function face(kind) {
+    const hair = kind === "boy"
+      ? `<path d="M56 22c-7-5 2-14 9-8 5 5-3 11-6 5M66 20c4-5 12-3 10 4" fill="none" stroke="#5b3a2b" stroke-width="2.4" stroke-linecap="round"/>`
+      : `<g><path d="M60 22C46 8 34 14 40 26c4 6 14 2 20-4z" fill="var(--bow)"/><path d="M60 22C74 8 86 14 80 26c-4 6-14 2-20-4z" fill="var(--bow)"/><circle cx="60" cy="22" r="5" fill="#ff7fbd"/></g>`;
+    return `<circle cx="18" cy="58" r="11" fill="var(--skin)"/><circle cx="102" cy="58" r="11" fill="var(--skin)"/>
+      <ellipse cx="60" cy="56" rx="44" ry="40" fill="var(--skin)"/>
+      <circle cx="33" cy="68" r="10" fill="var(--cheek)" opacity=".85"/><circle cx="87" cy="68" r="10" fill="var(--cheek)" opacity=".85"/>
+      <ellipse cx="46" cy="57" rx="3.2" ry="4" fill="#4a2e22"/><ellipse cx="74" cy="57" rx="3.2" ry="4" fill="#4a2e22"/>
+      <path d="M53 66q7 7 14 0" fill="none" stroke="#4a2e22" stroke-width="2.4" stroke-linecap="round"/>${hair}`;
+  }
+  $("boyFace").innerHTML = face("boy");
+  $("girlFace").innerHTML = face("girl");
+  $("revealFace").innerHTML = face("boy");
+
+  (function bunting() {
+    const cols = ["#f7a8b0", "#ffd36b", "#9fd8a6", "#8fc8f0", "#ffb37d", "#c9b3f2"];
+    let s = "";
+    const garland = (x0, x1, sag, start) => {
+      const mx = (x0 + x1) / 2, cy = sag;
+      s += `<path d="M${x0} 2Q${mx} ${cy} ${x1} 2" fill="none" stroke="#444" stroke-width="1.6"/>`;
+      for (let i = 1; i <= 4; i++) {
+        const t = i / 5, x = (1-t)*(1-t)*x0 + 2*(1-t)*t*mx + t*t*x1, y = 2*(1-t)*t*cy + 2*(1-t)*(1-t) + 2*t*t;
+        s += `<path d="M${x-13} ${y}L${x+13} ${y+1}L${x} ${y+24}z" fill="${cols[(i+start)%cols.length]}"/>`;
+      }
+    };
+    garland(-10, 150, 46, 0);
+    garland(250, 410, 46, 3);
+    $("bunting").innerHTML = s;
+    let sp = "";
+    const sc = ["#f7a8b0", "#ffd36b", "#9fd8a6", "#8fc8f0", "#ffb37d"];
+    let seed = 11;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let i = 0; i < 34; i++) {
+      const x = rnd()*400, y = 30 + rnd()*165;
+      if (x > 130 && x < 270 && y > 40 && y < 150) continue;
+      sp += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="5" height="2.4" rx="1" fill="${sc[i%sc.length]}" transform="rotate(${Math.round(rnd()*180)} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }
+    $("sprinkles").innerHTML = sp;
+  })();
+
+  // ---------- board ----------
+  function build() {
+    opened = new Array(9).fill(false);
+    won = null;
+    cellsEl.innerHTML = "";
+    cells.forEach((cell, i) => {
+      const d = document.createElement("div");
+      d.className = "cell";
+      d.innerHTML = `<svg class="heart" viewBox="0 0 100 100" aria-hidden="true">${cell.svg}</svg>`;
+      const n = document.createElement("button");
+      n.type = "button";
+      n.className = "note";
+      n.textContent = "?";
+      n.setAttribute("aria-label", `${i + 1}번 포스트잇 떼기`);
+      const [c, c2] = noteColors[i];
+      const r = ((i * 37) % 9) - 4;
+      n.style.setProperty("--c", c);
+      n.style.setProperty("--c2", c2);
+      n.style.setProperty("--r", r + "deg");
+      n.style.setProperty("--r2", (r + (i % 2 ? 50 : -50)) + "deg");
+      n.style.setProperty("--dx", (i % 3 === 0 ? -30 : i % 3 === 2 ? 30 : (i % 2 ? 20 : -20)) + "%");
+      n.addEventListener("click", () => peel(i, n, d));
+      d.appendChild(n);
+      cellsEl.appendChild(d);
+    });
+    const wl = $("winline");
+    wl.classList.remove("on");
+    wl.querySelector("path").setAttribute("d", "");
+    $("stamp").classList.remove("on");
+    $("again").hidden = true;
+    $("reveal").hidden = true;
+    setStatus();
+  }
+
+  function peel(i, note, cellEl) {
+    if (opened[i]) return;
+    opened[i] = true;
+    note.classList.add("peel");
+    setTimeout(() => { note.remove(); cellEl.classList.add("open"); check(); }, reduce ? 30 : 520);
+  }
+
+  function setStatus() {
+    const left = opened.filter((o) => !o).length;
+    statusEl.className = "status";
+    if (won) { statusEl.textContent = won === "b" ? "파란 하트 빙고! 아들이에요!" : "빨간 하트 빙고! 딸이에요!"; statusEl.classList.add("hot", won); return; }
+    let r = false, b = false;
+    for (const L of LINES) {
+      const open = L.filter((k) => opened[k]);
+      if (open.length !== 2) continue;
+      const c0 = cells[open[0]].c;
+      if (cells[open[1]].c === c0) { if (c0 === "r") r = true; else b = true; }
+    }
+    void statusEl.offsetWidth;
+    if (r && b) { statusEl.textContent = "빨간 줄도 파란 줄도 한 칸씩 남았어요!"; statusEl.classList.add("hot", "both"); }
+    else if (r) { statusEl.textContent = "빨간 하트 빙고까지 딱 한 칸!"; statusEl.classList.add("hot"); }
+    else if (b) { statusEl.textContent = "파란 하트 빙고까지 딱 한 칸!"; statusEl.classList.add("hot", "b"); }
+    else statusEl.textContent = left === 9 ? "포스트잇 9장, 어디부터 떼어 볼까요?" : `남은 포스트잇 ${left}장`;
+  }
+
+  function check() {
+    if (won) { setStatus(); return; }
+    for (const L of LINES) {
+      if (!L.every((k) => opened[k])) continue;
+      const c0 = cells[L[0]].c;
+      if (L.every((k) => cells[k].c === c0)) { win(L, c0); return; }
+    }
+    setStatus();
+  }
+
+  function center(k) { return [50 + (k % 3) * 99, 50 + Math.floor(k / 3) * 99]; }
+  function win(L, color) {
+    won = color;
+    setStatus();
+    const [x1, y1] = center(L[0]), [x2, y2] = center(L[2]);
+    const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), ex = dx / len * 34, ey = dy / len * 34;
+    const wl = $("winline"), p = wl.querySelector("path");
+    p.setAttribute("d", `M${x1 - ex} ${y1 - ey}L${x2 + ex} ${y2 + ey}`);
+    p.setAttribute("stroke", color === "b" ? "var(--blue-deep)" : "var(--red)");
+    wl.classList.add("on");
+    setTimeout(() => $("stamp").classList.add("on"), reduce ? 0 : 900);
+    setTimeout(showReveal, reduce ? 300 : 1900);
+  }
+
+  function showReveal() {
+    $("reveal").hidden = false;
+    $("again").hidden = false;
+    $("close").focus({ preventScroll: true });
+    confetti();
+  }
+
+  $("close").addEventListener("click", () => { $("reveal").hidden = true; });
+  $("again").addEventListener("click", showReveal);
+  $("reset").addEventListener("click", build);
+  $("reset2").addEventListener("click", build);
+
+  // ---------- confetti ----------
+  const cv = $("fx"), ctx = cv.getContext("2d");
+  let parts = [], raf = 0;
+  function heartPath(c, s) {
+    c.beginPath();
+    c.moveTo(0, s * .35);
+    c.bezierCurveTo(-s * .9, -s * .2, -s * .45, -s * .95, 0, -s * .4);
+    c.bezierCurveTo(s * .45, -s * .95, s * .9, -s * .2, 0, s * .35);
+    c.fill();
+  }
+  function confetti() {
+    if (reduce) return;
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cols = ["#1ea2e6", "#0f7fc0", "#7cc8f2", "#bfe6fb", "#ffd36b", "#ffffff"];
+    for (let i = 0; i < 170; i++) {
+      const fromLeft = i % 2 === 0;
+      parts.push({
+        x: fromLeft ? -10 : innerWidth + 10, y: innerHeight * (.55 + Math.random() * .3),
+        vx: (fromLeft ? 1 : -1) * (3 + Math.random() * 7), vy: -(9 + Math.random() * 9),
+        s: 6 + Math.random() * 9, a: Math.random() * 6, va: (Math.random() - .5) * .3,
+        col: cols[i % cols.length], heart: i % 3 === 0, life: 0
+      });
+    }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts = parts.filter((p) => p.y < innerHeight + 40 && p.life < 420);
+    for (const p of parts) {
+      p.life++; p.vy += .22; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.a += p.va;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillStyle = p.col;
+      if (p.col === "#ffffff") { ctx.strokeStyle = "#bfe6fb"; ctx.lineWidth = 1; }
+      if (p.heart) heartPath(ctx, p.s * 1.2); else ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      ctx.restore();
+    }
+    if (parts.length) raf = requestAnimationFrame(tick);
+    else { raf = 0; ctx.clearRect(0, 0, innerWidth, innerHeight); }
+  }
+
+  build();
+})();
+</script>
+</body>
+</html>
